@@ -2,6 +2,7 @@ package com.example.swipequiz
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,21 +20,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun InitViews() {
-        rvQuestions.layoutManager = LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
+        rvQuestions.layoutManager =
+            LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
         rvQuestions.adapter = questionAdapter
-        rvQuestions.addItemDecoration(DividerItemDecoration(this@MainActivity, DividerItemDecoration.VERTICAL))
+        rvQuestions.addItemDecoration(
+            DividerItemDecoration(
+                this@MainActivity,
+                DividerItemDecoration.VERTICAL
+            )
+        )
 
         for (i in Question.QUESTIONS.indices) {
             questions.add(Question(Question.QUESTIONS[i], Question.ANSWERS[i]))
         }
-        questionAdapter.notifyDataSetChanged()
 
-        createItemTouchHelper().attachToRecyclerView(rvQuestions)
+        this.createItemTouchHelper(ItemTouchHelper.LEFT, false).attachToRecyclerView(rvQuestions)
+        this.createItemTouchHelper(ItemTouchHelper.RIGHT, true).attachToRecyclerView(rvQuestions)
+        questionAdapter.notifyDataSetChanged()
     }
 
-    private fun createItemTouchHelper(): ItemTouchHelper {
-        val callback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-
+    private fun createItemTouchHelper(direction: Int, answer: Boolean): ItemTouchHelper {
+        val callback = object : ItemTouchHelper.SimpleCallback(0, direction) {
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -44,10 +51,14 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                questions.removeAt(position)
+
+                if (questions[position].answer == answer) {
+                    questions.removeAt(position)
+                } else {
+                    Toast.makeText(applicationContext, "Incorrect", Toast.LENGTH_LONG).show()
+                }
                 questionAdapter.notifyDataSetChanged()
             }
-
         }
         return ItemTouchHelper(callback)
     }
